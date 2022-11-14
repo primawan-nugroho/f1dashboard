@@ -90,7 +90,7 @@ def get_race(year, race, weekend, LIMIT_OUTLIER = 1000):
         driver1 = laps[laps['LapTime'] == laps['LapTime'].sort_values().iloc[0]]['Driver'].to_string(index=False, header=False)
         driver2 = laps[laps['LapTime'] == laps['LapTime'].sort_values().iloc[1]]['Driver'].to_string(index=False, header=False)
         
-        # Check whether driver1 == driver2, if yes then pick new fastest
+        # Check whether driver1 == driver2, if yes then pick new 2nd fastest driver
         i = 2
         while driver1 == driver2:
             driver2 = laps[laps['LapTime'] == laps['LapTime'].sort_values().iloc[i]]['Driver'].to_string(index=False, header=False)
@@ -103,25 +103,30 @@ def get_race(year, race, weekend, LIMIT_OUTLIER = 1000):
         fastest_driver1 = laps_driver1.pick_fastest().get_telemetry().add_distance()
         fastest_driver2 = laps_driver2.pick_fastest().get_telemetry().add_distance()
 
-        # Since the telemetry data does not have a variable that indicates the driver, we need to create that column
+        # add column driver
         fastest_driver1['Driver'] = driver1
         fastest_driver2['Driver'] = driver2
 
-        # Merge both lap telemetries so we have everything in one DataFrame
+        # Merge both lap telemetries and add column raceweek
         telemetry = pd.concat([fastest_driver1, fastest_driver2])
+        telemetry['Raceweek'] = race
 
     return df_local, telemetry
 
 df_R = pd.DataFrame()
 df_Q = pd.DataFrame()
+df_telemetry = pd.DataFrame()
 
 # get RACE and QUALIFICATION session and export to csv
 for raceweek in f1_cal:
     # get RACE data every race week and concat to df_R
-    df_R_temp = get_race(2022, raceweek, 'R', 1000)
+    df_R_temp, _ = get_race(2022, raceweek, 'R', 1000)
     df_R = pd.concat([df_R, df_R_temp])
     # get QUALIFICATION data every race week and concat to df_Q
-    df_Q_temp = get_race(2022, raceweek, 'Q', 1000)
+    df_Q_temp, df_telemetry_temp = get_race(2022, raceweek, 'Q', 1000)
     df_Q = pd.concat([df_Q, df_Q_temp])
+    df_telemetry = pd.concat([df_telemetry, df_telemetry_temp])
+
 df_R.to_csv("2022_race.csv")
 df_Q.to_csv("2022_qualification.csv")
+df_telemetry.to_csv("2022_telemetry_fastest_Q.csv")
