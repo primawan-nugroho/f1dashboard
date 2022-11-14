@@ -30,8 +30,8 @@ f1_cal = ['BAHRAIN GP',
             'SINGAPORE GP',
             'JAPANESE GP',
             'UNITED STATES GP',
-            'MEXICAN GP']
-            #'BRAZILIAN GP',
+            'MEXICAN GP',
+            'BRAZILIAN GP']
             #'ABU DHABI GP]'
 
 def get_race(year, race, weekend, LIMIT_OUTLIER = 1000):
@@ -82,7 +82,35 @@ def get_race(year, race, weekend, LIMIT_OUTLIER = 1000):
     ranks.reset_index(inplace=True)
     ranks = ranks.to_dict('list')
 
-    return df_local
+    telemetry = pd.DataFrame()
+
+    if(weekend=='Q'):
+        laps = session.load_laps(with_telemetry=True)
+        #Select lap for 2 fastest driver
+        driver1 = laps[laps['LapTime'] == laps['LapTime'].sort_values().iloc[0]]['Driver'].to_string(index=False, header=False)
+        driver2 = laps[laps['LapTime'] == laps['LapTime'].sort_values().iloc[1]]['Driver'].to_string(index=False, header=False)
+        
+        # Check whether driver1 == driver2, if yes then pick new fastest
+        i = 2
+        while driver1 == driver2:
+            driver2 = laps[laps['LapTime'] == laps['LapTime'].sort_values().iloc[i]]['Driver'].to_string(index=False, header=False)
+            i += 1
+
+        laps_driver1 = laps.pick_driver(driver1)
+        laps_driver2 = laps.pick_driver(driver2)
+    
+        # Get the telemetry data from their fastest lap
+        fastest_driver1 = laps_driver1.pick_fastest().get_telemetry().add_distance()
+        fastest_driver2 = laps_driver2.pick_fastest().get_telemetry().add_distance()
+
+        # Since the telemetry data does not have a variable that indicates the driver, we need to create that column
+        fastest_driver1['Driver'] = driver1
+        fastest_driver2['Driver'] = driver2
+
+        # Merge both lap telemetries so we have everything in one DataFrame
+        telemetry = pd.concat([fastest_driver1, fastest_driver2])
+
+    return df_local, telemetry
 
 df_R = pd.DataFrame()
 df_Q = pd.DataFrame()
