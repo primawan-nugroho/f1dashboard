@@ -32,7 +32,9 @@ def draw_boxplot_plotly(df, raceweek_selector):
             x='Driver',
             y='LapTime_seconds',
             category_orders=get_ranks(df[df['Raceweek']==raceweek_selector]),
-            title='Race Pace Analysis')
+            title='Race Pace Analysis',
+            color_discrete_sequence=["#328943"],
+            template = 'plotly_white')
     return boxplot
 
 def draw_boxplot(df, raceweek_selector):
