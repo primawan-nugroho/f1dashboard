@@ -73,3 +73,13 @@ boxplot.update_layout(
     xaxis=(dict(showgrid=False))
 )
 st.plotly_chart(boxplot)
+
+# --- HIDE STREAMLIT STYLE ---
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
